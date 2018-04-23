@@ -2,13 +2,11 @@
 #include <chrono>
 #include <thread>
 
-#define UNASSIGNED 0
-#define N 9
-
 /**
  * Following functions from: https://github.com/irawoodring/263/blob/master/backtracking/sample_code/backtracking.cpp
 **/
 
+// Prints the board out in a string format with its current values.
 void printBoard(int board[9][9]) {
 	printf("==============================================\n");
 	for (int row = 0; row < 9; row++) {
@@ -19,16 +17,18 @@ void printBoard(int board[9][9]) {
 	}
 }
 
+// Cycles through each space in the board, if the spot has yet to be assigned a value, row and col are updated and the function returns false. 
 bool findSpot(int board[9][9], int & row, int & col) {
 	for (int r = 0; r < 9; r++) {
 		for (int c = 0; c < 9; c++) {
-			if (board[r][c] == UNASSIGNED) {
+			if (board[r][c] == 0) {
 				row = r;
 				col = c;
 				return false;
 			}
 		}
 	}
+	return true;
 }
 
 /**
@@ -36,9 +36,9 @@ bool findSpot(int board[9][9], int & row, int & col) {
 **/
 
 // Returns whether any assigned entry in the specified row matches the given number.
-bool UsedInRow(int grid[N][N], int row, int val) {
-	for (int col = 0; col < N; col++) {
-		if (grid[row][col] == val) {
+bool UsedInRow(int board[9][9], int row, int val) {
+	for (int col = 0; col < 9; col++) {
+		if (board[row][col] == val) {
         		return true;
 		}
 	}
@@ -47,9 +47,9 @@ bool UsedInRow(int grid[N][N], int row, int val) {
 }
 
 // Returns whether any assigned entry in the specified column matches the given number.
-bool UsedInCol(int grid[N][N], int col, int val) {
-	for (int row = 0; row < N; row++) {
-		if (grid[row][col] == val) {
+bool UsedInCol(int board[9][9], int col, int val) {
+	for (int row = 0; row < 9; row++) {
+		if (board[row][col] == val) {
 			return true;
 		}
 	}
@@ -57,10 +57,10 @@ bool UsedInCol(int grid[N][N], int col, int val) {
 }
 
 // Returns whether any assigned entry within the specified 3x3 box matches the given number.
-bool UsedInBox(int grid[N][N], int startRow, int startCol, int val) {
+bool UsedInBox(int board[9][9], int startRow, int startCol, int val) {
 	for (int row = 0; row < 3; row++) {
 		for (int col = 0; col < 3; col++) {
-			if (grid[row + startRow][col + startCol] == val) {
+			if (board[row + startRow][col + startCol] == val) {
 				return true;
 			}
 		}
@@ -68,33 +68,35 @@ bool UsedInBox(int grid[N][N], int startRow, int startCol, int val) {
 	return false;
 }
 
-// Returns whether it will be legal to assign num to the given location.
-bool isValid(int grid[N][N], int row, int col, int num) {
-	return !UsedInRow(grid, row, num) && !UsedInCol(grid, col, num) && 
-		!UsedInBox(grid, row - row % 3, col - col % 3, num);
+// Returns whether it will be legal to assign num to the given location,
+// based on whether val has not yet been used in the current row, column, and box.
+bool isValid(int board[9][9], int row, int col, int val) {
+	return !UsedInRow(board, row, val) && !UsedInCol(board, col, val) && 
+		!UsedInBox(board, row - row % 3, col - col % 3, val);
 }
 
-bool solve(int board[9][9], int x, int y) {
-	int row = x;
-	int col = y;
+// Function that intakes the board and recursively checks for a correct solution. 
+bool solve(int board[9][9], int row, int col) {
+	int r = row;
+	int c = col;
 
-	printf("Examining %d, %d.\n", row, col);
+	printf("Examining %d, %d.\n", r, c);
 	printBoard(board);
 
-	if (findSpot(board, row, col)) {
+	if (findSpot(board, r, c)) {
 		return true;
 	}
 
 	for (int val = 1; val < 10; val++) {
-		if(isValid(board, row, col, val)) {
-			board[row][col] = val;
+		if(isValid(board, r, c, val)) {
+			board[r][c] = val;
 
-			if(solve(board, row, col)) {
+			if(solve(board, r, c)) {
 				return true;
 			}
 
 			printf("Backtracking.\n");
-			board[row][col] = UNASSIGNED;
+			board[r][c] = 0;
 		}
 	
 	}
